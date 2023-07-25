@@ -37,7 +37,7 @@ class FirstFragment : Fragment() {
         }
 
         val notificationHelper = NotificationHelper(requireContext())
-        notificationHelper.showNotification(0, "Title", "Message body")
+        notificationHelper.showNotification(0, getString(R.string.app_name), "I will show message here")
     }
 
     override fun onDestroyView() {

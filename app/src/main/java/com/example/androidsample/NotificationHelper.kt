@@ -34,7 +34,6 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
 //        val notification = createNotification(CHANNEL_GENERAL_NOTIFICATIONS, title, body)
         val notification =
             createCustomLayoutNotification(CHANNEL_GENERAL_NOTIFICATIONS, title, body)
-        notification.flags = Notification.FLAG_NO_CLEAR
         notificationManager.notify(notificationId, notification);
     }
 
@@ -63,18 +62,8 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     ): Notification {
         val customLayout = RemoteViews(packageName, R.layout.custom_notification_layout)
 
-        val parentView = customLayout.apply(applicationContext, null) as ViewGroup
-        val parentWidth = Resources.getSystem().displayMetrics
-        val textView = parentView.findViewById<TextView>(R.id.notification_title)
-
-        // Set textView width = 2/3 of parent
-        val layoutParams = textView.layoutParams
-        layoutParams.width = parentWidth.widthPixels * 2/3
-        layoutParams.height = parentWidth.heightPixels
-        textView.layoutParams = layoutParams
-        textView.text = title
-
-//        customLayout.setTextViewText(R.id.notification_title, title)
+        customLayout.setTextViewText(R.id.notification_title, title)
+        customLayout.setTextViewText(R.id.notification_body, body)
 //        customLayout.setImageViewResource(R.id.notification_banner, R.drawable.ic_notification_banner)
 
         return NotificationCompat.Builder(applicationContext, channelId)
