@@ -1,0 +1,86 @@
+package com.example.androidsample
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.res.Resources
+import android.os.Build
+import android.view.ViewGroup
+import android.widget.RemoteViews
+import android.widget.TextView
+import androidx.core.app.NotificationCompat
+
+class NotificationHelper(context: Context) : ContextWrapper(context) {
+    companion object {
+        const val CHANNEL_GENERAL_NOTIFICATIONS = "general_notifications"
+
+        fun createNotificationChannel(context: Context) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // Create Channel if SDK is Oreo (API 26 - Android 8.0) or higher
+                val channel = NotificationChannel(
+                    CHANNEL_GENERAL_NOTIFICATIONS,
+                    "General Notifications",
+                    NotificationManager.IMPORTANCE_DEFAULT
+                )
+                val notificationManager = context.getSystemService(NotificationManager::class.java);
+                notificationManager.createNotificationChannel(channel)
+            }
+        }
+    }
+
+    fun showNotification(notificationId: Int, title: String, body: String) {
+//        val notification = createNotification(CHANNEL_GENERAL_NOTIFICATIONS, title, body)
+        val notification =
+            createCustomLayoutNotification(CHANNEL_GENERAL_NOTIFICATIONS, title, body)
+        notification.flags = Notification.FLAG_NO_CLEAR
+        notificationManager.notify(notificationId, notification);
+    }
+
+    private val notificationManager: NotificationManager by lazy {
+        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
+
+    private fun createNotification(channelId: String, title: String, body: String): Notification {
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(applicationContext, channelId)
+        } else {
+            Notification.Builder(applicationContext)
+        }
+
+        return builder
+            .setContentTitle(title)
+            .setContentText(body)
+            .setSmallIcon(R.drawable.ic_notification)
+            .build()
+    }
+
+    private fun createCustomLayoutNotification(
+        channelId: String,
+        title: String,
+        body: String
+    ): Notification {
+        val customLayout = RemoteViews(packageName, R.layout.custom_notification_layout)
+
+        val parentView = customLayout.apply(applicationContext, null) as ViewGroup
+        val parentWidth = Resources.getSystem().displayMetrics
+        val textView = parentView.findViewById<TextView>(R.id.notification_title)
+
+        // Set textView width = 2/3 of parent
+        val layoutParams = textView.layoutParams
+        layoutParams.width = parentWidth.widthPixels * 2/3
+        layoutParams.height = parentWidth.heightPixels
+        textView.layoutParams = layoutParams
+        textView.text = title
+
+//        customLayout.setTextViewText(R.id.notification_title, title)
+//        customLayout.setImageViewResource(R.id.notification_banner, R.drawable.ic_notification_banner)
+
+        return NotificationCompat.Builder(applicationContext, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setCustomContentView(customLayout)
+            .setAutoCancel(true)
+            .build()
+    }
+}
