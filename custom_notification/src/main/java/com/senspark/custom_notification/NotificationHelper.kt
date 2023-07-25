@@ -5,10 +5,15 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.res.Configuration
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Matrix
+import android.graphics.Canvas
+import android.graphics.Point
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -66,27 +71,61 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         title: String,
         body: String
     ): Notification {
-        val customLayout = RemoteViews(packageName, R.layout.custom_notification_layout)
-        val parentView = customLayout.apply(applicationContext, null) as ViewGroup
 
-        // Make rounded background image
+        // Get Screen size
+        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val display = windowManager.defaultDisplay
+        val screenSize = Point()
+        display.getSize(screenSize)
+
+        // Get portrait or landscape layout
+        val isPortrait = resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+        val customLayoutId = R.layout.custom_notification_layout
+        val customLayout = RemoteViews(packageName, customLayoutId)
+
+        val parentView = customLayout.apply(applicationContext, null) as ViewGroup
         val imgView = parentView.findViewById<ImageView>(R.id.notification_background)
         val res = resources
-        val imgSrc = BitmapFactory.decodeResource(res, R.drawable.notification_background)
+        var imgSrc = BitmapFactory.decodeResource(res, R.drawable.notification_background)
+
+        // Crop image
+        val imgW = imgSrc.width
+        val cropW = if (isPortrait) screenSize.y else screenSize.x
+        val isCropped = cropW < imgW
+        if (isCropped) {
+            imgSrc = Bitmap.createBitmap(imgSrc, imgW - cropW, 0, cropW, imgSrc.height)
+        }
+
+        // Make rounded background image
         val dr = RoundedBitmapDrawableFactory.create(res, imgSrc)
         val cornerRadius = resources.getDimensionPixelSize(R.dimen.corner_radius).toFloat()
         dr.cornerRadius = cornerRadius
-        imgView.setImageDrawable(dr)
+
+        // Apply all
+        if (isCropped) {
+            val roundedCropped = convertToBitmap(dr, imgSrc.width, imgSrc.height)
+            customLayout.setImageViewBitmap(R.id.notification_background, roundedCropped)
+        } else {
+            imgView.setImageDrawable(dr)
+        }
 
         // Set text
         customLayout.setTextViewText(R.id.notification_title, title)
         customLayout.setTextViewText(R.id.notification_body, body)
-//        customLayout.setImageViewResource(R.id.notification_banner, R.drawable.ic_notification_banner)
 
         return NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(R.drawable.ic_notification)
             .setCustomContentView(customLayout)
             .setAutoCancel(true)
             .build()
+    }
+
+    private fun convertToBitmap(drawable: Drawable, widthPixels: Int, heightPixels: Int): Bitmap {
+        val mutableBitmap = Bitmap.createBitmap(widthPixels, heightPixels, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(mutableBitmap)
+        drawable.setBounds(0, 0, widthPixels, heightPixels)
+        drawable.draw(canvas)
+
+        return mutableBitmap
     }
 }
