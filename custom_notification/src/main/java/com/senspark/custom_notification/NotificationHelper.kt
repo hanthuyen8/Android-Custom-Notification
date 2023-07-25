@@ -88,26 +88,11 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         val res = resources
         var imgSrc = BitmapFactory.decodeResource(res, R.drawable.notification_background)
 
-        // Crop image
-        val imgW = imgSrc.width
-        val cropW = if (isPortrait) screenSize.y else screenSize.x
-        val isCropped = cropW < imgW
-        if (isCropped) {
-            imgSrc = Bitmap.createBitmap(imgSrc, imgW - cropW, 0, cropW, imgSrc.height)
-        }
-
         // Make rounded background image
         val dr = RoundedBitmapDrawableFactory.create(res, imgSrc)
         val cornerRadius = resources.getDimensionPixelSize(R.dimen.corner_radius).toFloat()
         dr.cornerRadius = cornerRadius
-
-        // Apply all
-        if (isCropped) {
-            val roundedCropped = convertToBitmap(dr, imgSrc.width, imgSrc.height)
-            customLayout.setImageViewBitmap(R.id.notification_background, roundedCropped)
-        } else {
-            imgView.setImageDrawable(dr)
-        }
+        imgView.setImageDrawable(dr)
 
         // Set text
         customLayout.setTextViewText(R.id.notification_title, title)
