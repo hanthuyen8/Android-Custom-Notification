@@ -71,15 +71,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         title: String,
         body: String
     ): Notification {
-
-        // Get Screen size
-        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        val display = windowManager.defaultDisplay
-        val screenSize = Point()
-        display.getSize(screenSize)
-
         // Get portrait or landscape layout
-        val isPortrait = resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
         val customLayoutId = R.layout.custom_notification_layout
         val customLayout = RemoteViews(packageName, customLayoutId)
 
