@@ -3,4 +3,5 @@
     <string name="app_name">App name</string>
     <string name="notification_title">Title</string>
     <string name="notification_body">Body Message</string>
+    <string name="game_icon">Game Icon</string>
 </resources>

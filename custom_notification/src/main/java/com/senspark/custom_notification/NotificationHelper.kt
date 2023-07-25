@@ -5,10 +5,14 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.ContextWrapper
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.os.Build
+import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.RemoteViews
-import android.widget.TextView
 import androidx.core.app.NotificationCompat
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 
 class NotificationHelper(context: Context) : ContextWrapper(context) {
     companion object {
@@ -31,7 +35,11 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
 
     fun showNotification(notificationId: Int, body: String) {
         val notification =
-            createCustomLayoutNotification(CHANNEL_GENERAL_NOTIFICATIONS, getString(R.string.app_name), body)
+            createCustomLayoutNotification(
+                CHANNEL_GENERAL_NOTIFICATIONS,
+                getString(R.string.app_name),
+                body
+            )
         notificationManager.notify(notificationId, notification);
     }
 
@@ -59,7 +67,18 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         body: String
     ): Notification {
         val customLayout = RemoteViews(packageName, R.layout.custom_notification_layout)
+        val parentView = customLayout.apply(applicationContext, null) as ViewGroup
 
+        // Make rounded background image
+        val imgView = parentView.findViewById<ImageView>(R.id.notification_background)
+        val res = resources
+        val imgSrc = BitmapFactory.decodeResource(res, R.drawable.notification_background)
+        val dr = RoundedBitmapDrawableFactory.create(res, imgSrc)
+        val cornerRadius = resources.getDimensionPixelSize(R.dimen.corner_radius).toFloat()
+        dr.cornerRadius = cornerRadius
+        imgView.setImageDrawable(dr)
+
+        // Set text
         customLayout.setTextViewText(R.id.notification_title, title)
         customLayout.setTextViewText(R.id.notification_body, body)
 //        customLayout.setImageViewResource(R.id.notification_banner, R.drawable.ic_notification_banner)
