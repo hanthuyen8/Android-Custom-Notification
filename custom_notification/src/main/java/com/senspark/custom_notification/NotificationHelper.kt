@@ -14,6 +14,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     companion object {
         const val CHANNEL_GENERAL_NOTIFICATIONS = "general_notifications"
 
+        @JvmStatic
         fun createNotificationChannel(context: Context) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 // Create Channel if SDK is Oreo (API 26 - Android 8.0) or higher
