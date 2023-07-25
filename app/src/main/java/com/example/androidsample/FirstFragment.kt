@@ -36,7 +36,8 @@ class FirstFragment : Fragment() {
             findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
         }
 
-        val notificationHelper = NotificationHelper(requireContext())
+        val notificationHelper =
+            com.senspark.custom_notification.NotificationHelper(requireContext())
         notificationHelper.showNotification(0, getString(R.string.app_name), "I will show message here")
     }
 

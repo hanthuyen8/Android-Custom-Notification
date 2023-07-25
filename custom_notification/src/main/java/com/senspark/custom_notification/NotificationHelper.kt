@@ -1,15 +1,12 @@
-package com.example.androidsample
+package com.senspark.custom_notification
 
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.ContextWrapper
-import android.content.res.Resources
 import android.os.Build
-import android.view.ViewGroup
 import android.widget.RemoteViews
-import android.widget.TextView
 import androidx.core.app.NotificationCompat
 
 class NotificationHelper(context: Context) : ContextWrapper(context) {

@@ -1,8 +1,5 @@
 package com.example.androidsample
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -39,7 +36,7 @@ class MainActivity : AppCompatActivity() {
                 .setAction("Action", null).show()
         }
 
-        NotificationHelper.createNotificationChannel(this)
+        com.senspark.custom_notification.NotificationHelper.createNotificationChannel(this)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
