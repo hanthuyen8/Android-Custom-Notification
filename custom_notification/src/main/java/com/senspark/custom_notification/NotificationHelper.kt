@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.os.Build
 import android.widget.RemoteViews
+import android.widget.TextView
 import androidx.core.app.NotificationCompat
 
 class NotificationHelper(context: Context) : ContextWrapper(context) {
@@ -27,10 +28,9 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         }
     }
 
-    fun showNotification(notificationId: Int, title: String, body: String) {
-//        val notification = createNotification(CHANNEL_GENERAL_NOTIFICATIONS, title, body)
+    fun showNotification(notificationId: Int, body: String) {
         val notification =
-            createCustomLayoutNotification(CHANNEL_GENERAL_NOTIFICATIONS, title, body)
+            createCustomLayoutNotification(CHANNEL_GENERAL_NOTIFICATIONS, getString(R.string.app_name), body)
         notificationManager.notify(notificationId, notification);
     }
 

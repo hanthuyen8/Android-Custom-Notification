@@ -38,7 +38,7 @@ class FirstFragment : Fragment() {
 
         val notificationHelper =
             com.senspark.custom_notification.NotificationHelper(requireContext())
-        notificationHelper.showNotification(0, getString(R.string.app_name), "I will show message here")
+        notificationHelper.showNotification(0, "I will show message here")
     }
 
     override fun onDestroyView() {
