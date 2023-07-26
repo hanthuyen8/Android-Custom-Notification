@@ -34,10 +34,21 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
                     "General Notifications",
                     NotificationManager.IMPORTANCE_DEFAULT
                 )
-                val notificationManager = context.getSystemService(NotificationManager::class.java);
+                val notificationManager = context.getSystemService(NotificationManager::class.java)
                 notificationManager.createNotificationChannel(channel)
             }
         }
+    }
+
+    enum class FrameWork {
+        Unknown, Unity, Cocos2dx
+    }
+
+    private var _framework: FrameWork = FrameWork.Unknown
+
+    fun init(frameWork: Int, context: Context) {
+        _framework = FrameWork.values()[frameWork]
+        createNotificationChannel(context)
     }
 
     fun showNotification(
@@ -98,9 +109,15 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         customLayout.setTextViewText(R.id.notification_title, title)
         customLayout.setTextViewText(R.id.notification_body, body)
 
+        // Set Icons
+        if (_framework == FrameWork.Unity) {
+            // Vì Unity đặt tên như vậy
+            customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.app_icon)
+        }
+
         val builder = NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(Color.WHITE)
+            .setColor(Color.MAGENTA)
             .setCustomContentView(customLayout)
             .setAutoCancel(true)
 
@@ -108,14 +125,5 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             builder.setContentIntent(clickIntent)
         }
         return builder.build()
-    }
-
-    private fun convertToBitmap(drawable: Drawable, widthPixels: Int, heightPixels: Int): Bitmap {
-        val mutableBitmap = Bitmap.createBitmap(widthPixels, heightPixels, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(mutableBitmap)
-        drawable.setBounds(0, 0, widthPixels, heightPixels)
-        drawable.draw(canvas)
-
-        return mutableBitmap
     }
 }
