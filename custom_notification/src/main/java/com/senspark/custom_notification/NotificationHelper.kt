@@ -3,12 +3,14 @@ package com.senspark.custom_notification
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Point
 import android.graphics.drawable.Drawable
 import android.os.Build
@@ -38,12 +40,17 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         }
     }
 
-    fun showNotification(notificationId: Int, body: String) {
+    fun showNotification(
+        notificationId: Int,
+        body: String,
+        clickIntent: PendingIntent? = null
+    ) {
         val notification =
             createCustomLayoutNotification(
                 CHANNEL_GENERAL_NOTIFICATIONS,
                 getString(R.string.app_name),
-                body
+                body,
+                clickIntent
             )
         notificationManager.notify(notificationId, notification);
     }
@@ -69,7 +76,8 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     private fun createCustomLayoutNotification(
         channelId: String,
         title: String,
-        body: String
+        body: String,
+        clickIntent: PendingIntent? = null
     ): Notification {
         // Get portrait or landscape layout
         val customLayoutId = R.layout.custom_notification_layout
@@ -82,7 +90,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
 
         // Make rounded background image
         val dr = RoundedBitmapDrawableFactory.create(res, imgSrc)
-        val cornerRadius = resources.getDimensionPixelSize(R.dimen.corner_radius).toFloat()
+        val cornerRadius = res.getDimensionPixelSize(R.dimen.corner_radius).toFloat()
         dr.cornerRadius = cornerRadius
         imgView.setImageDrawable(dr)
 
@@ -90,11 +98,16 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         customLayout.setTextViewText(R.id.notification_title, title)
         customLayout.setTextViewText(R.id.notification_body, body)
 
-        return NotificationCompat.Builder(applicationContext, channelId)
+        val builder = NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(R.drawable.ic_notification)
+            .setColor(Color.WHITE)
             .setCustomContentView(customLayout)
             .setAutoCancel(true)
-            .build()
+
+        if (clickIntent != null) {
+            builder.setContentIntent(clickIntent)
+        }
+        return builder.build()
     }
 
     private fun convertToBitmap(drawable: Drawable, widthPixels: Int, heightPixels: Int): Bitmap {
