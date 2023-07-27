@@ -36,7 +36,11 @@ class MainActivity : AppCompatActivity() {
                 .setAction("Action", null).show()
         }
 
-        com.senspark.custom_notification.NotificationHelper.createNotificationChannel(this)
+        val notificationHelper =
+            com.senspark.custom_notification.NotificationHelper(this)
+        notificationHelper.init(this)
+        notificationHelper.getIntentExtraData()
+        notificationHelper.showNotification(0, "Hello", "Damn")
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
