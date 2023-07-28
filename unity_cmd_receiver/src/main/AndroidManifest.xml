@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--    Override AndroidManifest.xml of Application with those lines:-->
+    <!--    <receiver-->
+    <!--        android:name="com.senspark.unity_cmd_receiver.UnityCommandsReceiver"-->
+    <!--        android:exported="true">-->
+    <!--        <intent-filter>-->
+    <!--            <action android:name="com.senspark.unity_cmd_receiver.ACTION_COMMANDS" />-->
+    <!--        </intent-filter>-->
+    <!--    </receiver>-->
+</manifest>
