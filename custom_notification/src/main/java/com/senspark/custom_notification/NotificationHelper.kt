@@ -1,6 +1,7 @@
 package com.senspark.custom_notification
 
 import android.app.Activity
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -40,10 +41,50 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     }
 
     private var _unityActivity: Activity? = null
+    private var _logger: Logger = Logger(false)
 
-    fun init(unityActivity: Activity) {
+    fun init(enableLog: Boolean, unityActivity: Activity) {
         _unityActivity = unityActivity
+        _logger = Logger(enableLog)
         createNotificationChannel(unityActivity)
+    }
+
+    fun unitySchedule(
+        notificationId: Int,
+        body: String,
+        extraData: String?,
+        delaySeconds: Long,
+        repeatSeconds: Long
+    ) {
+        val notification = createNotification(notificationId, body, extraData)
+        AlarmReceiver.schedule(
+            notificationId,
+            notification,
+            delaySeconds,
+            repeatSeconds,
+            applicationContext,
+            _logger
+        )
+    }
+
+    fun unitySchedule(
+        notificationId: Int,
+        body: String,
+        extraData: String?,
+        atHour: Int,
+        atMinute: Int,
+        repeatDays: Int
+    ) {
+        val notification = createNotification(notificationId, body, extraData)
+        AlarmReceiver.schedule(
+            notificationId,
+            notification,
+            atHour,
+            atMinute,
+            repeatDays,
+            applicationContext,
+            _logger
+        )
     }
 
     // For Unity
@@ -77,6 +118,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         notificationManager.notify(notificationId, builder.build());
     }
 
+    // Lấy ra extraData của notification gần nhất
     fun getIntentExtraData(): String {
         if (_unityActivity == null) return ""
         val intent = _unityActivity!!.intent
@@ -94,6 +136,20 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
 
+    private fun createNotification(
+        notificationId: Int,
+        body: String,
+        extraData: String?
+    ): Notification {
+        val customLayout = createCustomLayoutNotification(getString(R.string.app_name), body)
+        customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.app_icon)
+
+        val builder = createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
+        builder.setContentIntent(createClickIntent(notificationId, extraData, _unityActivity!!))
+
+        return builder.build()
+    }
+
     private fun createNotificationBuilder(
         channelId: String,
         layout: RemoteViews
@@ -101,7 +157,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         return NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(R.drawable.ic_notification)
             .setColor(Color.MAGENTA)
-            .setCustomContentView(layout);
+            .setCustomContentView(layout)
     }
 
     private fun createCustomLayoutNotification(
