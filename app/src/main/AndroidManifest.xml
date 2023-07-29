@@ -23,5 +23,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver android:name="com.senspark.custom_notification.AlarmReceiver" />
     </application>
 </manifest>

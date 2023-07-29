@@ -26,7 +26,7 @@ class AlarmReceiver : BroadcastReceiver() {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
             if (repeatSeconds > 0) {
-                _logger.log("nhanc18 Set delay after ${delaySeconds}s each ${repeatSeconds}s")
+                _logger.log("Set delay after ${delaySeconds}s each ${repeatSeconds}s")
                 alarmManager.setRepeating(
                     AlarmManager.RTC_WAKEUP,
                     delaySeconds * 1000,
@@ -34,7 +34,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     pendingIntent
                 )
             } else {
-                _logger.log("nhanc18 Set delay after ${delaySeconds}s once")
+                _logger.log("Set delay after ${delaySeconds}s once")
                 alarmManager.set(
                     AlarmManager.RTC_WAKEUP, delaySeconds * 1000, pendingIntent
                 )
@@ -61,9 +61,9 @@ class AlarmReceiver : BroadcastReceiver() {
             // Cộng thêm 1 ngày nếu thời gian đã trôi qua
             if (java.util.Calendar.getInstance().after(calendar)) {
                 calendar.add(java.util.Calendar.DATE, 1)
-                _logger.log("nhanc18 Set calender at ${atHour}h${atMinute}m tomorrow")
+                _logger.log("Set calender at ${atHour}h${atMinute}m tomorrow")
             } else {
-                _logger.log("nhanc18 Set calender at ${atHour}h${atMinute}m today")
+                _logger.log("Set calender at ${atHour}h${atMinute}m today")
             }
 
             alarmManager.setInexactRepeating(
