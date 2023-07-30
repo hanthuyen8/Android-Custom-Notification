@@ -5,13 +5,14 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Build
+import android.util.Log
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.RemoteViews
@@ -24,6 +25,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         const val kCHANNEL_GENERAL_NOTIFICATIONS = "general_notifications"
         const val kNOTIFICATION_EXTRA_DATA = "notificationData"
         const val kNOTIFICATION_ID = "notificationId"
+        const val TAG_UNITY = "Unity"
 
         @JvmStatic
         fun createNotificationChannel(context: Context) {
@@ -191,20 +193,98 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         extraData: String?,
         activity: Activity
     ): PendingIntent {
-        val it = Intent(applicationContext, activity.javaClass)
+        val it = Intent(applicationContext, getOpenAppActivity(applicationContext))
         it.putExtra(kNOTIFICATION_ID, notificationId)
         if (extraData != null) {
             it.putExtra(kNOTIFICATION_EXTRA_DATA, extraData)
         }
-        it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
 
-        val pendingIntent: PendingIntent = TaskStackBuilder.create(applicationContext).run {
-            addNextIntentWithParentStack(it)
-            getPendingIntent(
-                0,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        return PendingIntent.getActivity(
+            applicationContext,
+            0,
+            it,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        );
+    }
+
+    // Returns Activity class to be opened when notification is tapped
+    // Search is done in this order:
+    //   * class specified in meta-data key custom_notification_android_activity
+    //   * the only enabled activity with name ending in either .UnityPlayerActivity or .UnityPlayerGameActivity
+    //   * the only enabled activity in the package
+    private fun getOpenAppActivity(context: Context): Class<*>? {
+        try {
+            val pm = context.packageManager
+            val ai = pm.getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
+            val bundle = ai.metaData
+            if (bundle.containsKey("custom_notification_android_activity")) {
+                try {
+                    return Class.forName(bundle.getString("custom_notification_android_activity"))
+                } catch (e: ClassNotFoundException) {
+                    Log.e(
+                        TAG_UNITY,
+                        "Specified activity class for notifications not found: " + e.message
+                    )
+                }
+            }
+            Log.w(
+                TAG_UNITY,
+                "No custom_notification_android_activity found, attempting to find app activity class"
             )
+            val aInfo =
+                pm.getPackageInfo(context.packageName, PackageManager.GET_ACTIVITIES).activities
+            if (aInfo == null) {
+                Log.e(TAG_UNITY, "Could not get package activities")
+                return null
+            }
+            var activityClassName: String? = null
+            var activityIsUnity = false
+            var activityConflict = false
+            for (info in aInfo) {
+                // activity alias not supported
+                if (!info.enabled || info.targetActivity != null) continue
+                val candidateIsUnity: Boolean = isUnityActivity(info.name)
+                if (activityClassName == null) {
+                    activityClassName = info.name
+                    activityIsUnity = candidateIsUnity
+                    continue
+                }
+
+                // two Unity activities is a hard conflict
+                // two non-Unity activities is a conflict unless we find a Unity activity later on
+                if (activityIsUnity == candidateIsUnity) {
+                    activityConflict = true
+                    if (activityIsUnity && candidateIsUnity) break
+                    continue
+                }
+                if (candidateIsUnity) {
+                    activityClassName = info.name
+                    activityIsUnity = candidateIsUnity
+                    activityConflict = false
+                }
+            }
+            if (activityConflict) {
+                Log.e(
+                    TAG_UNITY,
+                    "Multiple choices for activity for notifications, set activity explicitly in Notification Settings"
+                )
+                return null
+            }
+            if (activityClassName == null) {
+                Log.e(TAG_UNITY, "Activity class for notifications not found")
+                return null
+            }
+            return Class.forName(activityClassName)
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+        } catch (e: ClassNotFoundException) {
+            Log.e(TAG_UNITY, "Failed to find activity class: " + e.message)
         }
-        return pendingIntent;
+        return null
+    }
+
+    private fun isUnityActivity(name: String): Boolean {
+        return name.endsWith(".UnityPlayerActivity") || name.endsWith(".UnityPlayerGameActivity")
     }
 }
