@@ -56,13 +56,17 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         repeatSeconds: Long
     ) {
         val notification = createNotification(notificationId, body, extraData)
-        AlarmReceiver.schedule(
-            notificationId,
-            notification,
-            delaySeconds,
-            repeatSeconds,
-            applicationContext
-        )
+        if (delaySeconds > 0) {
+            AlarmReceiver.schedule(
+                notificationId,
+                notification,
+                delaySeconds,
+                repeatSeconds,
+                applicationContext
+            )
+        } else {
+            notificationManager.notify(notificationId, notification)
+        }
     }
 
     fun unitySchedule(
