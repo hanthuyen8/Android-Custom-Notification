@@ -34,7 +34,11 @@ android {
     // For change output file name purpose only
     libraryVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "${namespace}-${defaultConfig.versionName}.aar"
+            if (variant.name == "release") {
+                outputFileName = "${namespace}-${defaultConfig.versionName}.aar"
+            } else {
+                outputFileName = "${namespace}-${defaultConfig.versionName}-${variant.name}.aar"
+            }
         }
     }
 }

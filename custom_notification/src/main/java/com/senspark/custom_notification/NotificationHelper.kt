@@ -41,11 +41,10 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     }
 
     private var _unityActivity: Activity? = null
-    private var _logger: Logger = Logger(false)
 
     fun init(enableLog: Boolean, unityActivity: Activity) {
         _unityActivity = unityActivity
-        _logger = Logger(enableLog)
+        Logger(enableLog)
         createNotificationChannel(unityActivity)
     }
 
@@ -62,8 +61,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             notification,
             delaySeconds,
             repeatSeconds,
-            applicationContext,
-            _logger
+            applicationContext
         )
     }
 
@@ -82,8 +80,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             atHour,
             atMinute,
             repeatDays,
-            applicationContext,
-            _logger
+            applicationContext
         )
     }
 

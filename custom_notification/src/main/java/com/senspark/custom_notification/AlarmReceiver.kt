@@ -19,14 +19,13 @@ class AlarmReceiver : BroadcastReceiver() {
             notification: Notification,
             delaySeconds: Long,
             repeatSeconds: Long,
-            context: Context,
-            _logger: Logger
+            context: Context
         ) {
             val pendingIntent = createIntent(id, notification, context)
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
             if (repeatSeconds > 0) {
-                _logger.log("Set delay after ${delaySeconds}s each ${repeatSeconds}s")
+                Logger.getInstance().log("Set delay after ${delaySeconds}s each ${repeatSeconds}s")
                 alarmManager.setRepeating(
                     AlarmManager.RTC_WAKEUP,
                     delaySeconds * 1000,
@@ -34,7 +33,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     pendingIntent
                 )
             } else {
-                _logger.log("Set delay after ${delaySeconds}s once")
+                Logger.getInstance().log("Set delay after ${delaySeconds}s once")
                 alarmManager.set(
                     AlarmManager.RTC_WAKEUP, delaySeconds * 1000, pendingIntent
                 )
@@ -47,8 +46,7 @@ class AlarmReceiver : BroadcastReceiver() {
             atHour: Int,
             atMinute: Int,
             repeatDays: Int,
-            context: Context,
-            _logger: Logger
+            context: Context
         ) {
             val pendingIntent = createIntent(id, notification, context)
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -61,9 +59,9 @@ class AlarmReceiver : BroadcastReceiver() {
             // Cộng thêm 1 ngày nếu thời gian đã trôi qua
             if (java.util.Calendar.getInstance().after(calendar)) {
                 calendar.add(java.util.Calendar.DATE, 1)
-                _logger.log("Set calender at ${atHour}h${atMinute}m tomorrow")
+                Logger.getInstance().log("Set calender at ${atHour}h${atMinute}m tomorrow")
             } else {
-                _logger.log("Set calender at ${atHour}h${atMinute}m today")
+                Logger.getInstance().log("Set calender at ${atHour}h${atMinute}m today")
             }
 
             alarmManager.setInexactRepeating(
@@ -91,7 +89,7 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.i("unity", "nhanc18 Received alarm")
+        Logger.getInstance().log("Received alarm")
         if (context == null || intent == null) return
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
