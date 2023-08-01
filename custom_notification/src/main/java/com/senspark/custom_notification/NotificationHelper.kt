@@ -10,6 +10,7 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
+import android.util.TypedValue
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import org.json.JSONObject
@@ -203,9 +204,11 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         channelId: String,
         layout: RemoteViews
     ): NotificationCompat.Builder {
+        val value = TypedValue()
+        applicationContext.theme.resolveAttribute(androidx.appcompat.R.attr.colorPrimary, value, true)
         return NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(Color.MAGENTA)
+            .setColor(value.data)
             .setCustomContentView(layout)
     }
 
