@@ -5,18 +5,13 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Build
-import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import org.json.JSONObject
 
 class NotificationHelper(context: Context) : ContextWrapper(context) {
@@ -55,14 +50,14 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         delaySeconds: Long,
         repeatSeconds: Long
     ) {
-        val notification = createNotification(notificationId, body, extraData)
+        val notification = createNotification(_unityActivity!!, notificationId, body, extraData)
         if (delaySeconds > 0) {
             AlarmReceiver.schedule(
                 notificationId,
                 notification,
                 delaySeconds,
                 repeatSeconds,
-                applicationContext
+                _unityActivity!!
             )
         } else {
             notificationManager.notify(notificationId, notification)
@@ -77,14 +72,14 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         atMinute: Int,
         repeatDays: Int
     ) {
-        val notification = createNotification(notificationId, body, extraData)
+        val notification = createNotification(_unityActivity!!, notificationId, body, extraData)
         AlarmReceiver.schedule(
             notificationId,
             notification,
             atHour,
             atMinute,
             repeatDays,
-            applicationContext
+            _unityActivity!!
         )
     }
 
@@ -98,7 +93,13 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.app_icon)
 
         val builder = createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
-        builder.setContentIntent(createClickIntent(notificationId, extraData, _unityActivity!!))
+        builder.setContentIntent(
+            createExtrasClickIntent(
+                _unityActivity!!,
+                notificationId,
+                extraData
+            )
+        )
 
         notificationManager.notify(notificationId, builder.build());
     }
@@ -116,7 +117,52 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             builder.setContentIntent(clickIntent)
         }
 
+        builder.setAutoCancel(true)
         notificationManager.notify(notificationId, builder.build());
+    }
+
+    fun createCocosNotification(
+        activity: Activity,
+        notificationId: Int,
+        body: String
+    ) {
+        val customLayout = createCustomLayoutNotification(getString(R.string.app_name), body)
+        var clickIntent = createClickIntent(activity)
+
+        val builder = createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
+        builder
+            .setContentIntent(clickIntent)
+            .setAutoCancel(true)
+        notificationManager.notify(notificationId, builder.build());
+    }
+
+    fun showCocosNotification(
+        activity: Activity,
+        notificationId: Int,
+        title: String,
+        body: String
+    ) {
+        val clickIntent = createClickIntent(activity)
+
+        val notificationManager =
+            applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "ee_x_channel_id_01"
+        val channelName = "ee_x_channel_name"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationChannel =
+                NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+            notificationChannel.setShowBadge(true)
+            notificationManager.createNotificationChannel(notificationChannel)
+        }
+        val notificationBuilder = NotificationCompat.Builder(applicationContext, channelId)
+        notificationBuilder.setAutoCancel(true)
+            .setDefaults(Notification.DEFAULT_ALL)
+            .setWhen(System.currentTimeMillis())
+            .setContentTitle(title)
+            .setContentText(body)
+            .setSmallIcon(R.mipmap.app_icon)
+            .setContentIntent(clickIntent)
+        notificationManager.notify(notificationId, notificationBuilder.build())
     }
 
     // Lấy ra extraData của notification gần nhất
@@ -138,6 +184,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     }
 
     private fun createNotification(
+        Activity: Activity,
         notificationId: Int,
         body: String,
         extraData: String?
@@ -146,7 +193,8 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.app_icon)
 
         val builder = createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
-        builder.setContentIntent(createClickIntent(notificationId, extraData, _unityActivity!!))
+        val clickIntent = createExtrasClickIntent(Activity, notificationId, extraData)
+        builder.setContentIntent(clickIntent)
 
         return builder.build()
     }
@@ -168,17 +216,6 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         val customLayoutId = R.layout.custom_notification_layout
         val customLayout = RemoteViews(packageName, customLayoutId)
 
-        val parentView = customLayout.apply(applicationContext, null) as ViewGroup
-        val imgView = parentView.findViewById<ImageView>(R.id.notification_background)
-        val res = resources
-        val imgSrc = BitmapFactory.decodeResource(res, R.drawable.notification_background)
-
-        // Make rounded background image
-        val dr = RoundedBitmapDrawableFactory.create(res, imgSrc)
-        val cornerRadius = res.getDimensionPixelSize(R.dimen.corner_radius).toFloat()
-        dr.cornerRadius = cornerRadius
-        imgView.setImageDrawable(dr)
-
         // Set text
         customLayout.setTextViewText(R.id.notification_title, title)
         customLayout.setTextViewText(R.id.notification_body, body)
@@ -186,25 +223,35 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         return customLayout;
     }
 
-    private fun createClickIntent(
+    private fun createClickIntent(activity: Activity): PendingIntent? {
+        val intent = Intent(activity, activity.javaClass)
+            .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        return PendingIntent.getActivity(
+            activity,
+            0,
+            intent,
+            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    private fun createExtrasClickIntent(
+        activity: Activity,
         notificationId: Int,
-        extraData: String?,
-        activity: Activity
+        extraData: String?
     ): PendingIntent {
-        val it = Intent(applicationContext, activity.javaClass)
+        val it = Intent(activity, activity.javaClass)
         it.putExtra(kNOTIFICATION_ID, notificationId)
         if (extraData != null) {
             it.putExtra(kNOTIFICATION_EXTRA_DATA, extraData)
         }
-        it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        val pendingIntent: PendingIntent = TaskStackBuilder.create(applicationContext).run {
-            addNextIntentWithParentStack(it)
-            getPendingIntent(
-                0,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-        }
-        return pendingIntent;
+        return PendingIntent.getActivity(
+            activity,
+            0,
+            it,
+            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
 }

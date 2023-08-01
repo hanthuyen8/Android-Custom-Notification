@@ -1,6 +1,7 @@
 package com.example.androidsample
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
@@ -35,12 +36,6 @@ class MainActivity : AppCompatActivity() {
                 .setAnchorView(R.id.fab)
                 .setAction("Action", null).show()
         }
-
-        val notificationHelper =
-            com.senspark.custom_notification.NotificationHelper(this)
-        notificationHelper.init(true,this)
-        notificationHelper.getIntentExtraData()
-        notificationHelper.unitySchedule(0, "Hello", "Damn", 0, 120)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -63,6 +58,11 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration)
                 || super.onSupportNavigateUp()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("MainActivity", "onDestroy")
     }
 }
 

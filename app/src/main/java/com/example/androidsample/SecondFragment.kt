@@ -35,6 +35,12 @@ class SecondFragment : Fragment() {
         binding.buttonSecond.setOnClickListener {
             findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
         }
+
+        val notificationHelper =
+            com.senspark.custom_notification.NotificationHelper(requireContext())
+        notificationHelper.init(true, requireActivity())
+//        notificationHelper.createCocosNotification(requireActivity(), 0, "Damn it")
+        notificationHelper.unitySchedule(0, "Damn it", "", 0, 0)
     }
 
     override fun onDestroyView() {
