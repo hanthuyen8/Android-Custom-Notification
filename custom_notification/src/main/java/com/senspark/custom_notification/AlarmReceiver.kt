@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.util.Log
 
 class AlarmReceiver : BroadcastReceiver() {
@@ -26,14 +27,16 @@ class AlarmReceiver : BroadcastReceiver() {
 
             if (repeatSeconds > 0) {
                 Logger.getInstance().log("Set delay after ${delaySeconds}s each ${repeatSeconds}s")
+                alarmManager.cancel(pendingIntent)
                 alarmManager.setRepeating(
                     AlarmManager.RTC_WAKEUP,
-                    delaySeconds * 1000,
+                    System.currentTimeMillis() + delaySeconds * 1000,
                     repeatSeconds * 1000,
                     pendingIntent
                 )
             } else {
                 Logger.getInstance().log("Set delay after ${delaySeconds}s once")
+                alarmManager.cancel(pendingIntent)
                 alarmManager.set(
                     AlarmManager.RTC_WAKEUP, delaySeconds * 1000, pendingIntent
                 )
@@ -64,6 +67,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 Logger.getInstance().log("Set calender at ${atHour}h${atMinute}m today")
             }
 
+            alarmManager.cancel(pendingIntent)
             alarmManager.setInexactRepeating(
                 AlarmManager.RTC_WAKEUP,
                 calendar.timeInMillis,
@@ -79,23 +83,30 @@ class AlarmReceiver : BroadcastReceiver() {
             intent.putExtra(kNOTIFICATION, notification)
             intent.putExtra(kNOTIFICATION_ID, id)
 
+            val flags =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                } else {
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                }
+
             return PendingIntent.getBroadcast(
                 context,
                 id,
                 intent,
-                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                flags
             )
         }
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        Logger.getInstance().log("Received alarm")
         if (context == null || intent == null) return
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notification: Notification? = intent.getParcelableExtra(kNOTIFICATION)
         val id = intent.getIntExtra(kNOTIFICATION_ID, -1)
         if (id >= 0) {
+            Logger.getInstance().log("Received Notification from AlarmManager with id: $id")
             notificationManager.notify(id, notification)
         }
     }
