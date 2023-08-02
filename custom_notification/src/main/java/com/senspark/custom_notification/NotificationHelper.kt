@@ -36,6 +36,10 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         }
     }
 
+    private val notificationManager: NotificationManager by lazy {
+        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
+
     private var _unityActivity: Activity? = null
 
     fun init(enableLog: Boolean, unityActivity: Activity) {
@@ -84,86 +88,10 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         )
     }
 
-    // For Unity
-    fun showNotification(
-        notificationId: Int,
-        body: String,
-        extraData: String?
-    ) {
+    fun cocosCreateNotificationBuilder(body: String): NotificationCompat.Builder {
         val customLayout = createCustomLayoutNotification(getString(R.string.app_name), body)
-        customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.app_icon)
-
-        val builder = createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
-        builder.setContentIntent(
-            createExtrasClickIntent(
-                _unityActivity!!,
-                notificationId,
-                extraData
-            )
-        )
-
-        notificationManager.notify(notificationId, builder.build());
-    }
-
-    // For Cocos2dx
-    fun showNotification(
-        notificationId: Int,
-        body: String,
-        clickIntent: PendingIntent? = null
-    ) {
-        val customLayout = createCustomLayoutNotification(getString(R.string.app_name), body)
-
-        val builder = createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
-        if (clickIntent != null) {
-            builder.setContentIntent(clickIntent)
-        }
-
-        builder.setAutoCancel(true)
-        notificationManager.notify(notificationId, builder.build());
-    }
-
-    fun createCocosNotification(
-        activity: Activity,
-        notificationId: Int,
-        body: String
-    ) {
-        val customLayout = createCustomLayoutNotification(getString(R.string.app_name), body)
-        var clickIntent = createClickIntent(activity)
-
-        val builder = createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
-        builder
-            .setContentIntent(clickIntent)
-            .setAutoCancel(true)
-        notificationManager.notify(notificationId, builder.build());
-    }
-
-    fun showCocosNotification(
-        activity: Activity,
-        notificationId: Int,
-        title: String,
-        body: String
-    ) {
-        val clickIntent = createClickIntent(activity)
-
-        val notificationManager =
-            applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "ee_x_channel_id_01"
-        val channelName = "ee_x_channel_name"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel =
-                NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
-            notificationChannel.setShowBadge(true)
-            notificationManager.createNotificationChannel(notificationChannel)
-        }
-        val notificationBuilder = NotificationCompat.Builder(applicationContext, channelId)
-        notificationBuilder.setAutoCancel(true)
-            .setDefaults(Notification.DEFAULT_ALL)
-            .setWhen(System.currentTimeMillis())
-            .setContentTitle(title)
-            .setContentText(body)
-            .setSmallIcon(R.mipmap.app_icon)
-            .setContentIntent(clickIntent)
-        notificationManager.notify(notificationId, notificationBuilder.build())
+        customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.ic_launcher)
+        return createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
     }
 
     // Lấy ra extraData của notification gần nhất
@@ -178,10 +106,6 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         jsonObject.put("id", id)
         jsonObject.put("extraData", intent.getStringExtra(kNOTIFICATION_EXTRA_DATA))
         return jsonObject.toString()
-    }
-
-    private val notificationManager: NotificationManager by lazy {
-        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
 
     private fun createNotification(
@@ -205,7 +129,11 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         layout: RemoteViews
     ): NotificationCompat.Builder {
         val value = TypedValue()
-        applicationContext.theme.resolveAttribute(androidx.appcompat.R.attr.colorPrimary, value, true)
+        applicationContext.theme.resolveAttribute(
+            androidx.appcompat.R.attr.colorPrimary,
+            value,
+            true
+        )
         return NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(R.drawable.ic_notification)
             .setColor(value.data)
@@ -224,18 +152,6 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         customLayout.setTextViewText(R.id.notification_body, body)
 
         return customLayout;
-    }
-
-    private fun createClickIntent(activity: Activity): PendingIntent? {
-        val intent = Intent(activity, activity.javaClass)
-            .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        return PendingIntent.getActivity(
-            activity,
-            0,
-            intent,
-            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
     }
 
     private fun createExtrasClickIntent(
