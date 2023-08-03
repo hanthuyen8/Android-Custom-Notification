@@ -168,7 +168,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
 
         return PendingIntent.getActivity(
             activity,
-            0,
+            notificationId,
             it,
             PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
