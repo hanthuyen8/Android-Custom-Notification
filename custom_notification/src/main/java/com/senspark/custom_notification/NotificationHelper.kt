@@ -8,11 +8,11 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
-import android.graphics.Color
 import android.os.Build
 import android.util.TypedValue
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import androidx.emoji2.text.EmojiCompat
 import org.json.JSONObject
 
 class NotificationHelper(context: Context) : ContextWrapper(context) {
@@ -50,12 +50,14 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
 
     fun unitySchedule(
         notificationId: Int,
+        title: String,
         body: String,
         extraData: String?,
         delaySeconds: Long,
         repeatSeconds: Long
     ) {
-        val notification = createNotification(_unityActivity!!, notificationId, body, extraData)
+        val notification =
+            createNotification(_unityActivity!!, notificationId, title, body, extraData)
         if (delaySeconds > 0) {
             AlarmReceiver.schedule(
                 notificationId,
@@ -71,13 +73,15 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
 
     fun unitySchedule(
         notificationId: Int,
+        title: String,
         body: String,
         extraData: String?,
         atHour: Int,
         atMinute: Int,
         repeatDays: Int
     ) {
-        val notification = createNotification(_unityActivity!!, notificationId, body, extraData)
+        val notification =
+            createNotification(_unityActivity!!, notificationId, title, body, extraData)
         AlarmReceiver.schedule(
             notificationId,
             notification,
@@ -109,16 +113,17 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     }
 
     private fun createNotification(
-        Activity: Activity,
+        activity: Activity,
         notificationId: Int,
+        title: String,
         body: String,
         extraData: String?
     ): Notification {
-        val customLayout = createCustomLayoutNotification(getString(R.string.app_name), body)
+        val customLayout = createCustomLayoutNotification(title, body)
         customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.app_icon)
 
         val builder = createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
-        val clickIntent = createExtrasClickIntent(Activity, notificationId, extraData)
+        val clickIntent = createExtrasClickIntent(activity, notificationId, extraData)
         builder.setContentIntent(clickIntent)
 
         return builder.build()
@@ -148,8 +153,15 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         val customLayout = RemoteViews(packageName, customLayoutId)
 
         // Set text
-        customLayout.setTextViewText(R.id.notification_title, title)
-        customLayout.setTextViewText(R.id.notification_body, body)
+        customLayout.setTextViewText(
+            R.id.notification_title,
+            EmojiCompat.get().process(unescapeString(title))
+        )
+
+        customLayout.setTextViewText(
+            R.id.notification_body,
+            EmojiCompat.get().process(unescapeString(body))
+        )
 
         return customLayout;
     }
@@ -172,5 +184,21 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             it,
             PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+    }
+
+    private fun unescapeString(escaped: String): String? {
+        var es = escaped
+        if (es.indexOf("\\u") == -1) return es
+        var processed = ""
+        var position = es.indexOf("\\u")
+        while (position != -1) {
+            if (position != 0) processed += es.substring(0, position)
+            val token = es.substring(position + 2, position + 6)
+            es = es.substring(position + 6)
+            processed += token.toInt(16).toChar()
+            position = es.indexOf("\\u")
+        }
+        processed += es
+        return processed
     }
 }

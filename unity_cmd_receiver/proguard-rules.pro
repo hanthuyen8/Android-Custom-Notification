@@ -19,3 +19,13 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-dontshrink
+
+-keep class com.senspark.unity_cmd_receiver.UnityCmdSenderInfo {
+    public *;
+}
+
+-keep class com.senspark.unity_cmd_receiver.UnityCmdReceiver {
+    public *;
+}

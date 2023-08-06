@@ -19,3 +19,13 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-dontshrink
+
+-keep class com.senspark.custom_notification.NotificationHelper {
+    public *;
+}
+
+-keep class com.senspark.custom_notification.AlarmReceiver {
+    public *;
+}
