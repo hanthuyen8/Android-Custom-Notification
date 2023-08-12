@@ -1,0 +1,13 @@
+<resources>
+    <string name="exit">x</string>
+    <string name="save">Save</string>
+    <string name="load">Load</string>
+    <string name="confirm_save">This will overwrite your saved data.\nDo you want to continue?</string>
+    <string name="confirm_load">This will overwrite your current data.\nDo you want to continue?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="ok">OK</string>
+    <string name="wait">Please wait...</string>
+    <string name="fail">Failed!</string>
+    <string name="success">Successful!</string>
+</resources>

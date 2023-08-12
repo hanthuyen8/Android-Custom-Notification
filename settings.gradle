@@ -16,3 +16,4 @@ rootProject.name = "Android Sample"
 include ':app'
 include ':custom_notification'
 include ':unity_cmd_receiver'
+include ':cloud-save'

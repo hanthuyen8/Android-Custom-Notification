@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Google Play game services IDs. Save this file as res/values/games-ids.xml in your project.-->
+<resources>
+    <!--app_id-->
+    <string name="app_id" translatable="false">1012155350488</string>
+    <!--package_name-->
+    <string name="package_name" translatable="false">com.senspark.gm9</string>
+    <!--leaderboard Leader Board-->
+    <string name="leaderboard_leader_board" translatable="false">CgkI2PujybodEAIQAQ</string>
+</resources>
