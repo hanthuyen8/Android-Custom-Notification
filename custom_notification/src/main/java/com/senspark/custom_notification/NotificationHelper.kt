@@ -52,12 +52,13 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         notificationId: Int,
         title: String,
         body: String,
+        backgroundIndex: Int,
         extraData: String?,
         delaySeconds: Long,
         repeatSeconds: Long
     ) {
         val notification =
-            createNotification(_unityActivity!!, notificationId, title, body, extraData)
+            createNotification(_unityActivity!!, notificationId, title, body, backgroundIndex, extraData)
         if (delaySeconds > 0) {
             AlarmReceiver.schedule(
                 notificationId,
@@ -75,13 +76,14 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         notificationId: Int,
         title: String,
         body: String,
+        backgroundIndex: Int,
         extraData: String?,
         atHour: Int,
         atMinute: Int,
         repeatDays: Int
     ) {
         val notification =
-            createNotification(_unityActivity!!, notificationId, title, body, extraData)
+            createNotification(_unityActivity!!, notificationId, title, body, backgroundIndex, extraData)
         AlarmReceiver.schedule(
             notificationId,
             notification,
@@ -92,8 +94,14 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         )
     }
 
+    fun cancel(
+        notificationId: Int
+    ) {
+        AlarmReceiver.cancel(notificationId, _unityActivity!!)
+    }
+
     fun cocosCreateNotificationBuilder(body: String): NotificationCompat.Builder {
-        val customLayout = createCustomLayoutNotification(getString(R.string.app_name), body)
+        val customLayout = createCustomLayoutNotification(getString(R.string.app_name), body, 0)
         customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.ic_launcher)
         return createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
     }
@@ -117,9 +125,10 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         notificationId: Int,
         title: String,
         body: String,
+        backgroundIndex: Int,
         extraData: String?
     ): Notification {
-        val customLayout = createCustomLayoutNotification(title, body)
+        val customLayout = createCustomLayoutNotification(title, body, backgroundIndex)
         customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.app_icon)
 
         val builder = createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
@@ -147,7 +156,8 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
 
     private fun createCustomLayoutNotification(
         title: String,
-        body: String
+        body: String,
+        backgroundIndex: Int,
     ): RemoteViews {
         val customLayoutId = R.layout.custom_notification_layout
         val customLayout = RemoteViews(packageName, customLayoutId)
@@ -161,6 +171,19 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         customLayout.setTextViewText(
             R.id.notification_body,
             EmojiCompat.get().process(unescapeString(body))
+        )
+
+        val backgroundId = when(backgroundIndex) {
+            1 -> R.drawable.notification_background_1
+            2 -> R.drawable.notification_background_2
+            3 -> R.drawable.notification_background_3
+            else -> R.drawable.notification_background_0
+        }
+
+        // Set Image
+        customLayout.setImageViewResource(
+            R.id.notification_background,
+            backgroundId
         )
 
         return customLayout;

@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/notification_background" />
+        android:src="@drawable/notification_background_0" />
 
     <ImageView
         android:id="@+id/notification_launcher_icon"

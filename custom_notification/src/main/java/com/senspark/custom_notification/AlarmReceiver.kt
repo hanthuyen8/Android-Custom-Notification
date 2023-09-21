@@ -76,11 +76,22 @@ class AlarmReceiver : BroadcastReceiver() {
             )
         }
 
+        fun cancel(
+            id: Int,
+            context: Context
+        ) {
+            val pendingIntent = createIntent(id, null, context)
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarmManager.cancel(pendingIntent);
+        }
+
         private fun createIntent(
-            id: Int, notification: Notification, context: Context
+            id: Int, notification: Notification?, context: Context
         ): PendingIntent {
             val intent = Intent(context, AlarmReceiver::class.java)
-            intent.putExtra(kNOTIFICATION, notification)
+            if (notification != null) {
+                intent.putExtra(kNOTIFICATION, notification)
+            }
             intent.putExtra(kNOTIFICATION_ID, id)
 
             val flags =
