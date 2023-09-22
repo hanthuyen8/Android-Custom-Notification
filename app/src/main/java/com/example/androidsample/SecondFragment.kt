@@ -40,7 +40,7 @@ class SecondFragment : Fragment() {
             com.senspark.custom_notification.NotificationHelper(requireContext())
         notificationHelper.init(true, requireActivity())
 //        notificationHelper.createCocosNotification(requireActivity(), 0, "Damn it")
-        notificationHelper.unitySchedule(0, "Damn it", "Body",1, "", 3, 0)
+        notificationHelper.unitySchedule(0, "Damn it", "Body the \uD83D\uDE0B",1, "", 3, 0)
     }
 
     override fun onDestroyView() {
