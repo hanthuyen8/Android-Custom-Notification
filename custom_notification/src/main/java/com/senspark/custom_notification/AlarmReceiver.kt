@@ -38,7 +38,9 @@ class AlarmReceiver : BroadcastReceiver() {
                 Logger.getInstance().log("Set delay after ${delaySeconds}s once")
                 alarmManager.cancel(pendingIntent)
                 alarmManager.set(
-                    AlarmManager.RTC_WAKEUP, delaySeconds * 1000, pendingIntent
+                    AlarmManager.RTC_WAKEUP,
+                    System.currentTimeMillis() + delaySeconds * 1000,
+                    pendingIntent
                 )
             }
         }
