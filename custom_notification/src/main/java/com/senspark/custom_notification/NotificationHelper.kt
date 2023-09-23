@@ -46,6 +46,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         _unityActivity = unityActivity
         Logger(enableLog)
         createNotificationChannel(unityActivity)
+        EmojiCompat.init(unityActivity)
     }
 
     fun unitySchedule(
@@ -101,9 +102,18 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     }
 
     fun cocosCreateNotificationBuilder(body: String): NotificationCompat.Builder {
-        val customLayout = createCustomLayoutNotification(getString(R.string.app_name), body, 0)
+        val newTitle = getString(R.string.app_name)
+        val newBody = processEmojiText(body)
+
+        val customLayout = createCustomLayoutNotification(newTitle, newBody, 0)
         customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.ic_launcher)
-        return createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
+
+        return createNotificationBuilder(
+            kCHANNEL_GENERAL_NOTIFICATIONS,
+            newTitle,
+            newBody,
+            customLayout
+        )
     }
 
     // Lấy ra extraData của notification gần nhất
@@ -128,10 +138,18 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         backgroundIndex: Int,
         extraData: String?
     ): Notification {
-        val customLayout = createCustomLayoutNotification(title, body, backgroundIndex)
+        val newTitle = processEmojiText(title)
+        val newBody = processEmojiText(body)
+
+        val customLayout = createCustomLayoutNotification(newTitle, newBody, backgroundIndex)
         customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.app_icon)
 
-        val builder = createNotificationBuilder(kCHANNEL_GENERAL_NOTIFICATIONS, customLayout)
+        val builder = createNotificationBuilder(
+            kCHANNEL_GENERAL_NOTIFICATIONS,
+            newTitle,
+            newBody,
+            customLayout
+        )
         val clickIntent = createExtrasClickIntent(activity, notificationId, extraData)
         builder.setContentIntent(clickIntent)
 
@@ -140,6 +158,8 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
 
     private fun createNotificationBuilder(
         channelId: String,
+        title: String,
+        body:String,
         layout: RemoteViews
     ): NotificationCompat.Builder {
         val value = TypedValue()
@@ -152,6 +172,9 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             .setSmallIcon(R.drawable.ic_notification)
             .setColor(value.data)
             .setCustomContentView(layout)
+            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+            .setContentTitle(title)
+            .setContentText(body)
     }
 
     private fun createCustomLayoutNotification(
@@ -161,16 +184,15 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     ): RemoteViews {
         val customLayoutId = R.layout.custom_notification_layout
         val customLayout = RemoteViews(packageName, customLayoutId)
-
         // Set text
         customLayout.setTextViewText(
             R.id.notification_title,
-            EmojiCompat.get().process(unescapeString(title))
+            title
         )
 
         customLayout.setTextViewText(
             R.id.notification_body,
-            EmojiCompat.get().process(unescapeString(body))
+            body
         )
 
         val backgroundId = when(backgroundIndex) {
@@ -187,6 +209,17 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         )
 
         return customLayout;
+    }
+
+    private fun processEmojiText(text: String): String {
+        val emoji = EmojiCompat.get()
+        val emojiState = emoji.loadState
+        return if (emojiState == EmojiCompat.LOAD_STATE_SUCCEEDED) {
+            emoji.process(text).toString()
+        } else {
+            Logger.getInstance().error("EmojiCompat failed to load")
+            text
+        }
     }
 
     private fun createExtrasClickIntent(
