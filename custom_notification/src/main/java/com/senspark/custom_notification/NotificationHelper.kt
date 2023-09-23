@@ -15,6 +15,9 @@ import androidx.core.app.NotificationCompat
 import androidx.emoji2.text.EmojiCompat
 import org.json.JSONObject
 
+/// Expanded View min height 252 dp
+/// Collapsed View max height 48 dp
+/// Heads-up View min height 88 dp
 class NotificationHelper(context: Context) : ContextWrapper(context) {
     companion object {
         const val kCHANNEL_GENERAL_NOTIFICATIONS = "general_notifications"
@@ -39,6 +42,11 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     private val notificationManager: NotificationManager by lazy {
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
+
+    // Android 12 new behaviour
+    // https://developer.android.com/about/versions/12/behavior-changes-12#custom-notifications
+    private val isAndroid12OrHigher: Boolean
+        get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
     private var _unityActivity: Activity? = null
 
@@ -95,25 +103,24 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         )
     }
 
-    fun cancel(
-        notificationId: Int
-    ) {
-        AlarmReceiver.cancel(notificationId, _unityActivity!!)
-    }
-
     fun cocosCreateNotificationBuilder(body: String): NotificationCompat.Builder {
         val newTitle = getString(R.string.app_name)
         val newBody = processEmojiText(body)
 
-        val customLayout = createCustomLayoutNotification(newTitle, newBody, 0)
-        customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.ic_launcher)
+        val views = createMultipleViews(newTitle, newBody, 0)
 
         return createNotificationBuilder(
             kCHANNEL_GENERAL_NOTIFICATIONS,
             newTitle,
             newBody,
-            customLayout
+            views
         )
+    }
+
+    fun cancel(
+        notificationId: Int
+    ) {
+        AlarmReceiver.cancel(notificationId, _unityActivity!!)
     }
 
     // Lấy ra extraData của notification gần nhất
@@ -141,14 +148,13 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         val newTitle = processEmojiText(title)
         val newBody = processEmojiText(body)
 
-        val customLayout = createCustomLayoutNotification(newTitle, newBody, backgroundIndex)
-        customLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.app_icon)
+        val views = createMultipleViews(newTitle, newBody, backgroundIndex)
 
         val builder = createNotificationBuilder(
             kCHANNEL_GENERAL_NOTIFICATIONS,
             newTitle,
             newBody,
-            customLayout
+            views
         )
         val clickIntent = createExtrasClickIntent(activity, notificationId, extraData)
         builder.setContentIntent(clickIntent)
@@ -156,11 +162,50 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         return builder.build()
     }
 
+    // Tạo 3 view: expanded, collapsed, headsUp
+    private fun createMultipleViews(
+        title: String,
+        body: String,
+        backgroundIndex: Int,
+    ): Array<RemoteViews?> {
+        val newTitle = processEmojiText(title)
+        val newBody = processEmojiText(body)
+
+        var collapsedLayout: RemoteViews? = null
+        val expandedLayout: RemoteViews
+
+        if (isAndroid12OrHigher) {
+            collapsedLayout = createCustomLayoutNotification(
+                newTitle,
+                newBody,
+                R.layout.custom_notification_layout_collapsed,
+                backgroundIndex
+            )
+            expandedLayout = createCustomLayoutNotification(
+                newTitle,
+                newBody,
+                R.layout.custom_notification_layout_12,
+                backgroundIndex
+            )
+        } else {
+            expandedLayout = createCustomLayoutNotification(
+                newTitle,
+                newBody,
+                R.layout.custom_notification_layout,
+                backgroundIndex
+            )
+            expandedLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.app_icon)
+        }
+
+        return arrayOf(expandedLayout, collapsedLayout)
+    }
+
+    // Views must be: [expandedLayout, collapsedLayout, headsUpLayout]
     private fun createNotificationBuilder(
         channelId: String,
         title: String,
-        body:String,
-        layout: RemoteViews
+        body: String,
+        views: Array<RemoteViews?>
     ): NotificationCompat.Builder {
         val value = TypedValue()
         applicationContext.theme.resolveAttribute(
@@ -168,21 +213,41 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             value,
             true
         )
-        return NotificationCompat.Builder(applicationContext, channelId)
+
+        val builder = NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(R.drawable.ic_notification)
             .setColor(value.data)
-            .setCustomContentView(layout)
-            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-            .setContentTitle(title)
-            .setContentText(body)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+
+        val viewsCount = views.count()
+        val expandedLayout = views[0]
+        val collapsedLayout: RemoteViews? = if (viewsCount >= 2) views[1] else null
+        val headsUpLayout: RemoteViews? = if (viewsCount >= 3) views[2] else null
+
+        if (isAndroid12OrHigher) {
+            builder
+                .setCustomBigContentView(expandedLayout)
+                .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+                .setContentTitle(title)
+                .setContentText(body)
+            if (collapsedLayout != null) {
+                builder.setCustomContentView(collapsedLayout)
+            }
+            if (headsUpLayout != null) {
+                builder.setCustomHeadsUpContentView(headsUpLayout)
+            }
+        } else {
+            builder.setCustomContentView(expandedLayout)
+        }
+        return builder
     }
 
     private fun createCustomLayoutNotification(
         title: String,
         body: String,
+        customLayoutId: Int,
         backgroundIndex: Int,
     ): RemoteViews {
-        val customLayoutId = R.layout.custom_notification_layout
         val customLayout = RemoteViews(packageName, customLayoutId)
         // Set text
         customLayout.setTextViewText(
@@ -240,21 +305,5 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             it,
             PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-    }
-
-    private fun unescapeString(escaped: String): String? {
-        var es = escaped
-        if (es.indexOf("\\u") == -1) return es
-        var processed = ""
-        var position = es.indexOf("\\u")
-        while (position != -1) {
-            if (position != 0) processed += es.substring(0, position)
-            val token = es.substring(position + 2, position + 6)
-            es = es.substring(position + 6)
-            processed += token.toInt(16).toChar()
-            position = es.indexOf("\\u")
-        }
-        processed += es
-        return processed
     }
 }

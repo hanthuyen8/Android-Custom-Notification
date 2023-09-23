@@ -4,4 +4,5 @@
     <string name="notification_title">Title</string>
     <string name="notification_body">Body Message 🫠, 🫱🏼‍🫲🏿, 🫰🏽</string>
     <string name="game_icon">Game Icon</string>
+    <string name="background_image">Background image</string>
 </resources>
