@@ -10,6 +10,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.util.TypedValue
 import android.widget.RemoteViews
@@ -65,17 +66,87 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         EmojiCompat.init(unityActivity)
     }
 
+    fun unityScheduleTime(jsonString: String) {
+        Logger.getInstance().log("unityScheduleTime: $jsonString")
+        try {
+            val json = JSONObject(jsonString)
+            var notificationId = json.getInt("notificationId")
+            val title = json.getString("title")
+            val body = json.getString("body")
+            val titleColor = if (json.has("titleColor")) json.getString("titleColor") else null
+            val bodyColor = if (json.has("bodyColor")) json.getString("bodyColor") else null
+            val backgroundIndex = json.getInt("backgroundIndex")
+            val extraData = json.getString("extraData")
+            val delaySeconds = json.getLong("delaySeconds")
+            val repeatSeconds = json.getLong("repeatSeconds")
+            unitySchedule(
+                notificationId,
+                title,
+                body,
+                titleColor,
+                bodyColor,
+                backgroundIndex,
+                extraData,
+                delaySeconds,
+                repeatSeconds
+            )
+        } catch (e: Exception) {
+            Logger.getInstance().error("Error parsing json: $jsonString")
+        }
+    }
+
+    fun unityScheduleDate(jsonString: String) {
+        Logger.getInstance().log("unityScheduleDate: $jsonString")
+        try {
+            val json = JSONObject(jsonString)
+            var notificationId = json.getInt("notificationId")
+            val title = json.getString("title")
+            val body = json.getString("body")
+            val titleColor = if (json.has("titleColor")) json.getString("titleColor") else null
+            val bodyColor = if (json.has("bodyColor")) json.getString("bodyColor") else null
+            val backgroundIndex = json.getInt("backgroundIndex")
+            val extraData = json.getString("extraData")
+            val atHour = json.getInt("atHour")
+            val atMinute = json.getInt("atMinute")
+            val repeatDays = json.getInt("repeatDays")
+            unitySchedule(
+                notificationId,
+                title,
+                body,
+                titleColor,
+                bodyColor,
+                backgroundIndex,
+                extraData,
+                atHour,
+                atMinute,
+                repeatDays
+            )
+        } catch (e: Exception) {
+            Logger.getInstance().error("Error parsing json: $jsonString")
+        }
+    }
+
     fun unitySchedule(
         notificationId: Int,
         title: String,
         body: String,
+        titleColor: String?,
+        bodyColor: String?,
         backgroundIndex: Int,
         extraData: String?,
         delaySeconds: Long,
         repeatSeconds: Long
     ) {
-        val notification =
-            createNotification(_unityActivity!!, notificationId, title, body, backgroundIndex, extraData)
+        val notification = createNotification(
+            _unityActivity!!,
+            notificationId,
+            title,
+            body,
+            titleColor,
+            bodyColor,
+            backgroundIndex,
+            extraData
+        )
         if (delaySeconds > 0) {
             AlarmReceiver.schedule(
                 notificationId,
@@ -93,14 +164,24 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         notificationId: Int,
         title: String,
         body: String,
+        titleColor: String?,
+        bodyColor: String?,
         backgroundIndex: Int,
         extraData: String?,
         atHour: Int,
         atMinute: Int,
         repeatDays: Int
     ) {
-        val notification =
-            createNotification(_unityActivity!!, notificationId, title, body, backgroundIndex, extraData)
+        val notification = createNotification(
+            _unityActivity!!,
+            notificationId,
+            title,
+            body,
+            titleColor,
+            bodyColor,
+            backgroundIndex,
+            extraData
+        )
         AlarmReceiver.schedule(
             notificationId,
             notification,
@@ -115,7 +196,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         val newTitle = getString(R.string.app_name)
         val newBody = processEmojiText(body)
 
-        val views = createMultipleViews(newTitle, newBody, 0)
+        val views = createMultipleViews(newTitle, newBody, null, null, 0)
 
         return createNotificationBuilder(
             kCHANNEL_GENERAL_NOTIFICATIONS,
@@ -157,13 +238,15 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         notificationId: Int,
         title: String,
         body: String,
+        titleColor: String?,
+        bodyColor: String?,
         backgroundIndex: Int,
         extraData: String?
     ): Notification {
         val newTitle = processEmojiText(title)
         val newBody = processEmojiText(body)
 
-        val views = createMultipleViews(newTitle, newBody, backgroundIndex)
+        val views = createMultipleViews(newTitle, newBody, titleColor, bodyColor, backgroundIndex)
 
         val builder = createNotificationBuilder(
             kCHANNEL_GENERAL_NOTIFICATIONS,
@@ -181,6 +264,8 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     private fun createMultipleViews(
         title: String,
         body: String,
+        titleColor: String?,
+        bodyColor: String?,
         backgroundIndex: Int,
     ): Array<RemoteViews?> {
         val newTitle = processEmojiText(title)
@@ -193,12 +278,16 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             collapsedLayout = createCustomLayoutNotification(
                 newTitle,
                 newBody,
+                titleColor,
+                bodyColor,
                 R.layout.custom_notification_layout_collapsed,
                 backgroundIndex
             )
             expandedLayout = createCustomLayoutNotification(
                 newTitle,
                 newBody,
+                titleColor,
+                bodyColor,
                 R.layout.custom_notification_layout_12,
                 backgroundIndex
             )
@@ -206,6 +295,8 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             expandedLayout = createCustomLayoutNotification(
                 newTitle,
                 newBody,
+                titleColor,
+                bodyColor,
                 R.layout.custom_notification_layout,
                 backgroundIndex
             )
@@ -265,6 +356,8 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     private fun createCustomLayoutNotification(
         title: String,
         body: String,
+        titleColor: String?,
+        bodyColor: String?,
         customLayoutId: Int,
         backgroundIndex: Int,
     ): RemoteViews {
@@ -274,13 +367,29 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             R.id.notification_title,
             title
         )
+        if (titleColor != null) {
+            try {
+                val color = Color.parseColor(titleColor)
+                customLayout.setTextColor(R.id.notification_title, color)
+            } catch (e: Exception) {
+                Logger.getInstance().error("Error parsing color: $titleColor")
+            }
+        }
 
         customLayout.setTextViewText(
             R.id.notification_body,
             body
         )
+        if (bodyColor != null) {
+            try {
+                val color = Color.parseColor(bodyColor)
+                customLayout.setTextColor(R.id.notification_body, color)
+            } catch (e: Exception) {
+                Logger.getInstance().error("Error parsing color: $bodyColor")
+            }
+        }
 
-        val backgroundId = when(backgroundIndex) {
+        val backgroundId = when (backgroundIndex) {
             1 -> R.drawable.notification_background_1
             2 -> R.drawable.notification_background_2
             3 -> R.drawable.notification_background_3
