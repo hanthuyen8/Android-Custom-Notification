@@ -2,6 +2,8 @@ package com.senspark.custom_notification
 
 import android.app.Activity
 import android.app.Notification
+import android.app.Notification.DEFAULT_SOUND
+import android.app.Notification.DEFAULT_VIBRATE
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -24,14 +26,25 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         const val kNOTIFICATION_EXTRA_DATA = "notificationData"
         const val kNOTIFICATION_ID = "notificationId"
 
+        // Android 12 new behaviour
+        // https://developer.android.com/about/versions/12/behavior-changes-12#custom-notifications
+        private val isAndroid12OrHigher: Boolean
+            get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S // API 31
+
+        private val isAndroid8OrHigher: Boolean
+            get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O // API 26
+
+        private val isAndroid5OrHigher: Boolean
+            get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP // API 21
+
         @JvmStatic
         fun createNotificationChannel(context: Context) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (isAndroid8OrHigher) {
                 // Create Channel if SDK is Oreo (API 26 - Android 8.0) or higher
                 val channel = NotificationChannel(
                     kCHANNEL_GENERAL_NOTIFICATIONS,
                     "General Notifications",
-                    NotificationManager.IMPORTANCE_DEFAULT
+                    NotificationManager.IMPORTANCE_HIGH
                 )
                 val notificationManager = context.getSystemService(NotificationManager::class.java)
                 notificationManager.createNotificationChannel(channel)
@@ -42,11 +55,6 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
     private val notificationManager: NotificationManager by lazy {
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
-
-    // Android 12 new behaviour
-    // https://developer.android.com/about/versions/12/behavior-changes-12#custom-notifications
-    private val isAndroid12OrHigher: Boolean
-        get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
     private var _unityActivity: Activity? = null
 
@@ -137,6 +145,13 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         return jsonObject.toString()
     }
 
+    private fun hasPermission(): Boolean {
+        if (!isAndroid12OrHigher) {
+            return true;
+        }
+        return false;
+    }
+
     private fun createNotification(
         activity: Activity,
         notificationId: Int,
@@ -196,8 +211,9 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             )
             expandedLayout.setImageViewResource(R.id.notification_launcher_icon, R.mipmap.app_icon)
         }
+        val headsUpLayout = collapsedLayout
 
-        return arrayOf(expandedLayout, collapsedLayout)
+        return arrayOf(expandedLayout, collapsedLayout, headsUpLayout)
     }
 
     // Views must be: [expandedLayout, collapsedLayout, headsUpLayout]
@@ -218,6 +234,10 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             .setSmallIcon(R.drawable.ic_notification)
             .setColor(value.data)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+        if (isAndroid8OrHigher) {
+            builder.setDefaults(DEFAULT_SOUND or DEFAULT_VIBRATE)
+            builder.setVibrate(longArrayOf(0L))
+        }
 
         val viewsCount = views.count()
         val expandedLayout = views[0]
