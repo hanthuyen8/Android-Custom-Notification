@@ -98,9 +98,9 @@ class AlarmReceiver : BroadcastReceiver() {
 
             val flags =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
                 } else {
-                    PendingIntent.FLAG_UPDATE_CURRENT
+                    PendingIntent.FLAG_CANCEL_CURRENT
                 }
 
             return PendingIntent.getBroadcast(

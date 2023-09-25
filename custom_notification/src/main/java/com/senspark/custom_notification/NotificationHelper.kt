@@ -201,11 +201,18 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         }
         it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
 
+        val ptFlags =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
+            } else {
+                PendingIntent.FLAG_CANCEL_CURRENT
+            }
+
         return PendingIntent.getActivity(
             activity,
             notificationId,
             it,
-            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            ptFlags
         )
     }
 
