@@ -5,6 +5,7 @@
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -14,10 +15,10 @@
         tools:targetApi="31">
         <activity
             android:name=".MainActivity"
-            android:launchMode="singleTask"
-            android:taskAffinity=""
             android:exported="true"
             android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
             android:theme="@style/Theme.AndroidSample">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

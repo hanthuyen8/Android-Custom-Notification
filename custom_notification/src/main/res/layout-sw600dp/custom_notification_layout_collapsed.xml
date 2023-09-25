@@ -2,35 +2,22 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/notification_layout"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="48dp"
     android:background="@android:color/transparent">
 
     <ImageView
         android:id="@+id/notification_background"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:contentDescription="@string/background_image"
+        android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:src="@drawable/notification_background_0" />
-
-    <ImageView
-        android:id="@+id/notification_launcher_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
-        android:contentDescription="@string/game_icon"
-        android:src="@mipmap/ic_launcher" />
+        android:src="@drawable/notification_background_0"
+        android:contentDescription="@string/background_image" />
 
     <TextView
         android:id="@+id/notification_title"
-        android:layout_width="200dp"
+        android:layout_width="300dp"
         android:layout_height="24dp"
-        android:layout_alignParentEnd="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="100dp"
-        android:layout_toEndOf="@+id/notification_launcher_icon"
+        android:layout_marginStart="5dp"
         android:ellipsize="end"
         android:gravity="start"
         android:text="@string/notification_title"
@@ -40,16 +27,13 @@
 
     <TextView
         android:id="@+id/notification_body"
-        android:layout_width="200dp"
-        android:layout_height="56dp"
+        android:layout_width="300dp"
+        android:layout_height="24dp"
         android:layout_below="@+id/notification_title"
-        android:layout_alignParentEnd="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="150dp"
-        android:layout_toEndOf="@+id/notification_launcher_icon"
+        android:layout_marginStart="5dp"
         android:ellipsize="end"
         android:gravity="start"
-        android:maxLines="3"
+        android:maxLines="1"
         android:scrollHorizontally="true"
         android:text="@string/notification_body"
         android:textAppearance="@style/TextAppearance.Compat.Notification.Line2"

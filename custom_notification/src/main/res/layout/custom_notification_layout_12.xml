@@ -13,26 +13,17 @@
         android:scaleType="centerCrop"
         android:src="@drawable/notification_background_0" />
 
-    <ImageView
-        android:id="@+id/notification_launcher_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
-        android:contentDescription="@string/game_icon"
-        android:src="@mipmap/ic_launcher" />
-
     <TextView
         android:id="@+id/notification_title"
-        android:layout_width="200dp"
+        android:layout_width="match_parent"
         android:layout_height="24dp"
         android:layout_alignParentEnd="true"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="12dp"
         android:layout_marginEnd="100dp"
-        android:layout_toEndOf="@+id/notification_launcher_icon"
         android:ellipsize="end"
         android:gravity="start"
+        android:includeFontPadding="true"
         android:text="@string/notification_title"
         android:textAppearance="@style/TextAppearance.Compat.Notification.Title"
         android:textColor="@color/text_color"
@@ -40,15 +31,15 @@
 
     <TextView
         android:id="@+id/notification_body"
-        android:layout_width="200dp"
+        android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_below="@+id/notification_title"
         android:layout_alignParentEnd="true"
         android:layout_marginStart="10dp"
-        android:layout_marginEnd="150dp"
-        android:layout_toEndOf="@+id/notification_launcher_icon"
+        android:layout_marginEnd="100dp"
         android:ellipsize="end"
         android:gravity="start"
+        android:includeFontPadding="true"
         android:maxLines="3"
         android:scrollHorizontally="true"
         android:text="@string/notification_body"

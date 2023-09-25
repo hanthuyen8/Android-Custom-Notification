@@ -40,7 +40,10 @@ class SecondFragment : Fragment() {
             com.senspark.custom_notification.NotificationHelper(requireContext())
         notificationHelper.init(true, requireActivity())
 //        notificationHelper.createCocosNotification(requireActivity(), 0, "Damn it")
-        notificationHelper.unitySchedule(0, "Damn it", "Body the \uD83D\uDE0B",1, "", 3, 0)
+        notificationHelper.unitySchedule(0, "Hello world 1a", "This is the short message \uD83D\uDE0B", "#FF0000","#00FF00",0, "", 0, 0)
+//        notificationHelper.unitySchedule(1, "Hello world 2a", "This is the long message \uD83D\uDE0B. This will also make a single line with ellipsis. This is the message \uD83D\uDE0B. This will also make a single line with ellipsis. This is the message \uD83D\uDE0B. This will also make a single line with ellipsis",0, "", 0, 0)
+//        notificationHelper.unitySchedule(2, "Hello world 1b", "This is the short message \uD83D\uDE0B",0, "", 0, 0)
+//        notificationHelper.unitySchedule(3, "Hello world 2b", "This is the long message \uD83D\uDE0B. This will also make a single line with ellipsis. This is the message \uD83D\uDE0B. This will also make a single line with ellipsis. This is the message \uD83D\uDE0B. This will also make a single line with ellipsis",0, "", 0, 0)
     }
 
     override fun onDestroyView() {
