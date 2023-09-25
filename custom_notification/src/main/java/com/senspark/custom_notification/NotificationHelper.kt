@@ -35,6 +35,9 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         private val isAndroid8OrHigher: Boolean
             get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O // API 26
 
+        private val isAndroid6OrHigher: Boolean
+            get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M // API 21
+
         private val isAndroid5OrHigher: Boolean
             get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP // API 21
 
@@ -429,7 +432,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
 
         val ptFlags =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (isAndroid6OrHigher) {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
             } else {
                 PendingIntent.FLAG_CANCEL_CURRENT
