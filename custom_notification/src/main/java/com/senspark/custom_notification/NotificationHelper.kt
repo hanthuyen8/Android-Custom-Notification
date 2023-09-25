@@ -29,8 +29,8 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
 
         // Android 12 new behaviour
         // https://developer.android.com/about/versions/12/behavior-changes-12#custom-notifications
-        private val isAndroid12OrHigher: Boolean
-            get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S // API 31
+        private val isAndroid13OrHigher: Boolean
+            get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU // API 33
 
         private val isAndroid8OrHigher: Boolean
             get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O // API 26
@@ -229,13 +229,6 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         return jsonObject.toString()
     }
 
-    private fun hasPermission(): Boolean {
-        if (!isAndroid12OrHigher) {
-            return true;
-        }
-        return false;
-    }
-
     private fun createNotification(
         activity: Activity,
         notificationId: Int,
@@ -277,7 +270,7 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         var collapsedLayout: RemoteViews? = null
         val expandedLayout: RemoteViews
 
-        if (isAndroid12OrHigher) {
+        if (isAndroid13OrHigher) {
             collapsedLayout = createCustomLayoutNotification(
                 newTitle,
                 newBody,
@@ -338,18 +331,18 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
         val collapsedLayout: RemoteViews? = if (viewsCount >= 2) views[1] else null
         val headsUpLayout: RemoteViews? = if (viewsCount >= 3) views[2] else null
 
-        if (isAndroid12OrHigher) {
+        if (isAndroid13OrHigher) {
             builder
                 .setCustomBigContentView(expandedLayout)
                 .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                 .setContentTitle(title)
                 .setContentText(body)
-            if (collapsedLayout != null) {
-                builder.setCustomContentView(collapsedLayout)
-            }
-            if (headsUpLayout != null) {
-                builder.setCustomHeadsUpContentView(headsUpLayout)
-            }
+//            if (collapsedLayout != null) {
+//                builder.setCustomContentView(collapsedLayout)
+//            }
+//            if (headsUpLayout != null) {
+//                builder.setCustomHeadsUpContentView(headsUpLayout)
+//            }
         } else {
             builder.setCustomContentView(expandedLayout)
         }
