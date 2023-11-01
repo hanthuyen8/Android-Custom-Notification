@@ -385,11 +385,10 @@ class NotificationHelper(context: Context) : ContextWrapper(context) {
             }
         }
 
-        val backgroundId = when (backgroundIndex) {
-            1 -> R.drawable.notification_background_1
-            2 -> R.drawable.notification_background_2
-            3 -> R.drawable.notification_background_3
-            else -> R.drawable.notification_background_0
+        val backgroundUri = "@drawable/notification_background_$backgroundIndex"
+        var backgroundId = resources.getIdentifier(backgroundUri, null, packageName)
+        if (backgroundId <= 0) {
+            backgroundId = R.drawable.notification_background_blank
         }
 
         // Set Image
